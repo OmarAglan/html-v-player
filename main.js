@@ -1,83 +1,83 @@
 "use strict";
 
-const playNpauseBtn = document.querySelector("#play-pause");
-const video = document.querySelector("video");
-const rewindBtn = document.querySelector("#rewind");
-const fastForwardBtn = document.querySelector("#fast-forward");
-const volumeBtn = document.querySelector("#volume");
-const progressIndicator = document.querySelector("#progress-indicator");
-const progessBar = document.querySelector("#progress-bar");
+const _PlayPauseButton = document.querySelector("#play-pause");
+const _Video = document.querySelector("video");
+const _RewindButton = document.querySelector("#rewind");
+const _FastForwardButton = document.querySelector("#fast-forward");
+const _VolumeButton = document.querySelector("#volume");
+const _ProgressIndicator = document.querySelector("#progress-indicator");
+const _ProgressBar = document.querySelector("#progress-bar");
 
-function playNpauseFn() {
-  video.paused ? video.play() : video.pause();
+function PlayPause() {
+  _Video.paused ? _Video.play() : _Video.pause();
 }
 
-function updatePlayNPauseIcon() {
-  const icon = playNpauseBtn.querySelector("i");
+function UpdatePlayPauseIcon() {
+  const icon = _PlayPauseButton.querySelector("i");
   icon.textContent = "";
 
-  icon.textContent = video.paused ? "play_arrow" : "paused";
+  icon.textContent = _Video.paused ? "play_arrow" : "paused";
 }
 
-function rewindNforwardFn(type) {
-  video.currentTime += type === "rewind" ? -10 : 10;
+function RewindForward(type) {
+  _Video.currentTime += type === "rewind" ? -10 : 10;
 }
 
-function muteNunmuteFn() {
-  video.muted = video.muted ? false : true;
+function MuteUnmute() {
+  _Video.muted = _Video.muted ? false : true;
 }
 
-function updateVolumeIcon() {
-  const icon = volumeBtn.querySelector("i");
+function UpdateVolumeIcon() {
+  const icon = _VolumeButton.querySelector("i");
   icon.textContent = "";
-  icon.textContent = video.muted ? "volume_off" : "volume_up";
+  icon.textContent = _Video.muted ? "volume_off" : "volume_up";
 }
 
-function updateProgress() {
-  const progressPercentage = (video.currentTime / video.duration) * 100;
+function UpdateProgress() {
+  const progressPercentage = (_Video.currentTime / _Video.duration) * 100;
 
-  progressIndicator.style.width = `${progressPercentage}%`;
+  _ProgressIndicator.style.width = `${progressPercentage}%`;
 }
 
-function seekingFn(e) {
-  const updatedTime = (e.offsetX / progessBar.offsetWidth) * video.duration;
+function Seeking(e) {
+  const updatedTime = (e.offsetX / _ProgressBar.offsetWidth) * _Video.duration;
 
-  video.currentTime = updatedTime;
+  _Video.currentTime = updatedTime;
 }
 
 // PLAY AND PAUSE FUNCTIONALITY
-video.addEventListener("play", updatePlayNPauseIcon);
-video.addEventListener("click", playNpauseFn);
-video.addEventListener("pause", updatePlayNPauseIcon);
-playNpauseBtn.addEventListener("click", playNpauseFn);
+_Video.addEventListener("play", UpdatePlayPauseIcon);
+_Video.addEventListener("click", PlayPause);
+_Video.addEventListener("pause", UpdatePlayPauseIcon);
+_PlayPauseButton.addEventListener("click", PlayPause);
 
 // REWIND AND FAST FORWARD
-rewindBtn.addEventListener("click", () => rewindNforwardFn("rewind"));
-fastForwardBtn.addEventListener("click", () => rewindNforwardFn("forward"));
+_RewindButton.addEventListener("click", () => RewindForward("rewind"));
+_FastForwardButton.addEventListener("click", () => RewindForward("forward"));
 
 // MUTE AND UNMUTE
-video.addEventListener("volumechange", updateVolumeIcon);
-volumeBtn.addEventListener("click", muteNunmuteFn);
+_Video.addEventListener("volumechange", UpdateVolumeIcon);
+_VolumeButton.addEventListener("click", MuteUnmute);
 
 // PROGRESS
-video.addEventListener("timeupdate", updateProgress);
+_Video.addEventListener("timeupdate", UpdateProgress);
 
 // SEEKING
 let mouseIsDown = false;
 
-progessBar.addEventListener("mousedown", () => (mouseIsDown = true));
-progessBar.addEventListener("mouseup", () => (mouseIsDown = false));
-progessBar.addEventListener("click", seekingFn);
-progessBar.addEventListener("mousemove", (e) => mouseIsDown && seekingFn);
+_ProgressBar.addEventListener("mousedown", () => (mouseIsDown = true));
+_ProgressBar.addEventListener("mouseup", () => (mouseIsDown = false));
+_ProgressBar.addEventListener("click", Seeking);
+_ProgressBar.addEventListener("mousemove", (e) => mouseIsDown && Seeking);
 
-// KEYBOARD NAVIGATIONS
+// KEYBOARD Navigation
 window.addEventListener("keyup", (e) => {
   if (e.code === "Space") {
-    playNpauseFn();
+    PlayPause();
   } else if (e.code === "ArrowLeft") {
-    rewindNforwardFn("rewind");
+    RewindForward("rewind");
   } else if (e.code === "ArrowRight") {
-    rewindNforwardFn("forward");
+    RewindForward("forward");
   } else {
     return;
   }
