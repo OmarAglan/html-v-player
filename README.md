@@ -3,4 +3,22 @@ This Is a Simple Video Player, made Using the:
 2. Tailwind CSS
 3. JavaScript
 
-You Can see The Live Demo Here: https://simple-video-player.onrender.com
+## How To Use
+### Clone the Repository
+``` 
+git clone https://github.com/OmarAglan/html-v-player.git
+cd html-v-player
+```
+### Installation
+First, You Need To Install The Dependencies:
+```
+npm install
+```
+### Run
+```
+npm run dev
+```
+You Can see Results Here: http://localhost:3000
+
+### Live Demo
+You Can see The Live Demo Here: [Here](https://simple-video-player.onrender.com)

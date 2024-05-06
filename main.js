@@ -24,7 +24,7 @@ function RewindForward(type) {
 }
 
 function MuteUnmute() {
-  _Video.muted = _Video.muted ? false : true;
+  _Video.muted = !_Video.muted;
 }
 
 function UpdateVolumeIcon() {
@@ -40,9 +40,7 @@ function UpdateProgress() {
 }
 
 function Seeking(e) {
-  const updatedTime = (e.offsetX / _ProgressBar.offsetWidth) * _Video.duration;
-
-  _Video.currentTime = updatedTime;
+  _Video.currentTime = (e.offsetX / _ProgressBar.offsetWidth) * _Video.duration;
 }
 
 // PLAY AND PAUSE FUNCTIONALITY
@@ -68,7 +66,7 @@ let mouseIsDown = false;
 _ProgressBar.addEventListener("mousedown", () => (mouseIsDown = true));
 _ProgressBar.addEventListener("mouseup", () => (mouseIsDown = false));
 _ProgressBar.addEventListener("click", Seeking);
-_ProgressBar.addEventListener("mousemove", (e) => mouseIsDown && Seeking);
+_ProgressBar.addEventListener("mousemove", () => mouseIsDown && Seeking);
 
 // KEYBOARD Navigation
 window.addEventListener("keyup", (e) => {
@@ -79,6 +77,6 @@ window.addEventListener("keyup", (e) => {
   } else if (e.code === "ArrowRight") {
     RewindForward("forward");
   } else {
-    return;
+    console.log(e.code);
   }
 });
