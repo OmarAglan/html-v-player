@@ -13,8 +13,8 @@ const _CurrentTime = document.getElementById("current-time");
 const _Duration = document.getElementById("duration");
 const _LoadingSpinner = document.getElementById("loading-spinner");
 const _ErrorMessage = document.getElementById("error-message");
-const _CinemaMode = document.getElementById("cinema-mode");
 const _CinemaModeToggle = document.getElementById("cinema-mode-toggle");
+const _CinemaMode = document.getElementById("cinema-mode");
 
 // State
 let isPlaying = false;
@@ -81,11 +81,22 @@ function MuteUnmute() {
 // Cinema mode
 function toggleCinemaMode() {
   isCinemaMode = !isCinemaMode;
-  _CinemaMode.classList.toggle("active");
-  const icon = _CinemaModeToggle.querySelector("i");
-  icon.classList.toggle("ph-monitor-play");
-  icon.classList.toggle("ph-monitor-x");
+  _CinemaMode.classList.toggle('active');
+  document.body.classList.toggle('cinema-mode');
+  
+  // Update icon
+  const icon = _CinemaModeToggle.querySelector('i');
+  icon.className = isCinemaMode ? 'ph ph-monitor-x text-white text-3xl sm:text-4xl' : 'ph ph-monitor-play text-white text-3xl sm:text-4xl';
 }
+
+_CinemaModeToggle.addEventListener('click', toggleCinemaMode);
+
+// Exit cinema mode when clicking outside video
+document.addEventListener('click', (e) => {
+  if (isCinemaMode && !_Video.parentElement.contains(e.target) && !_CinemaModeToggle.contains(e.target)) {
+    toggleCinemaMode();
+  }
+});
 
 // Fullscreen
 function toggleFullscreen() {
@@ -120,14 +131,6 @@ _VolumeSlider.addEventListener("input", (e) => {
 });
 
 _FullscreenButton.addEventListener("click", toggleFullscreen);
-_CinemaModeToggle.addEventListener("click", toggleCinemaMode);
-
-// Click outside video to exit cinema mode
-document.addEventListener("click", (e) => {
-  if (isCinemaMode && !_Video.parentElement.parentElement.contains(e.target)) {
-    toggleCinemaMode();
-  }
-});
 
 _ProgressBar.addEventListener("click", (e) => {
   const rect = _ProgressBar.getBoundingClientRect();
