@@ -1,180 +1,222 @@
-"use strict";
-
-const _PlayPauseButton = document.querySelector("#play-pause");
+// Get DOM elements
 const _Video = document.querySelector("video");
-const _RewindButton = document.querySelector("#rewind");
-const _FastForwardButton = document.querySelector("#fast-forward");
-const _VolumeButton = document.querySelector("#volume");
-const _ProgressIndicator = document.querySelector("#progress-indicator");
-const _ProgressBar = document.querySelector("#progress-bar");
+const _Controls = document.getElementById("controls");
+const _PlayPauseButton = document.getElementById("play-pause");
+const _RewindButton = document.getElementById("rewind");
+const _FastForwardButton = document.getElementById("fast-forward");
+const _VolumeButton = document.getElementById("volume");
+const _VolumeSlider = document.getElementById("volume-slider");
+const _FullscreenButton = document.getElementById("fullscreen");
+const _ProgressBar = document.getElementById("progress-bar");
+const _ProgressIndicator = document.getElementById("progress-indicator");
+const _CurrentTime = document.getElementById("current-time");
+const _Duration = document.getElementById("duration");
+const _LoadingSpinner = document.getElementById("loading-spinner");
+const _ErrorMessage = document.getElementById("error-message");
+const _CinemaMode = document.getElementById("cinema-mode");
+const _CinemaModeToggle = document.getElementById("cinema-mode-toggle");
 
+// State
+let isPlaying = false;
+let isCinemaMode = false;
+let previousVolume = 1;
+
+// Initialize
+_Video.volume = _VolumeSlider.value / 100;
+
+// Format time in MM:SS
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  seconds = Math.floor(seconds % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Update progress bar
+function UpdateProgress() {
+  const progress = (_Video.currentTime / _Video.duration) * 100;
+  _ProgressIndicator.style.width = `${progress}%`;
+  _CurrentTime.textContent = formatTime(_Video.currentTime);
+  _Duration.textContent = formatTime(_Video.duration);
+}
+
+// Play/Pause
 function PlayPause() {
-  _Video.paused ? _Video.play() : _Video.pause();
+  if (_Video.paused) {
+    _Video.play().catch(handleError);
+    _PlayPauseButton.querySelector("i").classList.replace("ph-play", "ph-pause");
+    isPlaying = true;
+  } else {
+    _Video.pause();
+    _PlayPauseButton.querySelector("i").classList.replace("ph-pause", "ph-play");
+    isPlaying = false;
+  }
 }
 
-function UpdatePlayPauseIcon() {
-  const icon = _PlayPauseButton.querySelector("i");
-  icon.textContent = "";
-
-  icon.textContent = _Video.paused ? "play_arrow" : "paused";
-}
-
-function RewindForward(type) {
-  _Video.currentTime += type === "rewind" ? -10 : 10;
+// Volume control
+function UpdateVolumeIcon() {
+  const volumeIcon = _VolumeButton.querySelector("i");
+  volumeIcon.classList.remove("ph-speaker-none", "ph-speaker-low", "ph-speaker-high");
+  
+  if (_Video.volume === 0) {
+    volumeIcon.classList.add("ph-speaker-none");
+  } else if (_Video.volume < 0.5) {
+    volumeIcon.classList.add("ph-speaker-low");
+  } else {
+    volumeIcon.classList.add("ph-speaker-high");
+  }
 }
 
 function MuteUnmute() {
-  _Video.muted = !_Video.muted;
-}
-
-function UpdateVolumeIcon() {
-  const icon = _VolumeButton.querySelector("i");
-  icon.textContent = "";
-  icon.textContent = _Video.muted ? "volume_off" : "volume_up";
-}
-
-function UpdateProgress() {
-  const progressPercentage = (_Video.currentTime / _Video.duration) * 100;
-
-  _ProgressIndicator.style.width = `${progressPercentage}%`;
-}
-
-function Seeking(e) {
-  _Video.currentTime = (e.offsetX / _ProgressBar.offsetWidth) * _Video.duration;
-}
-
-// Error handling and status messages
-const showMessage = (message, type = 'error') => {
-  const messageContainer = document.createElement('div');
-  messageContainer.className = `message ${type} absolute top-4 right-4 p-4 rounded-lg text-white ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} opacity-0 transition-opacity duration-300`;
-  messageContainer.textContent = message;
-  document.querySelector('#container').appendChild(messageContainer);
-  
-  // Show message
-  setTimeout(() => messageContainer.classList.add('opacity-100'), 100);
-  
-  // Remove message after 3 seconds
-  setTimeout(() => {
-    messageContainer.classList.remove('opacity-100');
-    setTimeout(() => messageContainer.remove(), 300);
-  }, 3000);
-};
-
-// Enhanced error handling for video
-_Video.addEventListener('error', () => {
-  const error = _Video.error;
-  let message = 'An error occurred while playing the video.';
-  
-  switch (error.code) {
-    case 1:
-      message = 'Video loading was aborted.';
-      break;
-    case 2:
-      message = 'Network error occurred while loading the video.';
-      break;
-    case 3:
-      message = 'Error decoding video file.';
-      break;
-    case 4:
-      message = 'Video format not supported.';
-      break;
+  if (_Video.volume === 0) {
+    _Video.volume = previousVolume;
+    _VolumeSlider.value = previousVolume * 100;
+  } else {
+    previousVolume = _Video.volume;
+    _Video.volume = 0;
+    _VolumeSlider.value = 0;
   }
-  
-  showMessage(message);
-});
+  UpdateVolumeIcon();
+}
 
-// Loading state handling
-_Video.addEventListener('waiting', () => {
-  const loadingSpinner = document.createElement('div');
-  loadingSpinner.id = 'loading-spinner';
-  loadingSpinner.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
-  loadingSpinner.innerHTML = '<i class="material-icons animate-spin text-white text-4xl">refresh</i>';
-  document.querySelector('#container').appendChild(loadingSpinner);
-});
+// Cinema mode
+function toggleCinemaMode() {
+  isCinemaMode = !isCinemaMode;
+  _CinemaMode.classList.toggle("active");
+  const icon = _CinemaModeToggle.querySelector("i");
+  icon.classList.toggle("ph-monitor-play");
+  icon.classList.toggle("ph-monitor-x");
+}
 
-_Video.addEventListener('playing', () => {
-  const spinner = document.querySelector('#loading-spinner');
-  if (spinner) spinner.remove();
-});
-
-// PLAY AND PAUSE FUNCTIONALITY
-_Video.addEventListener("play", UpdatePlayPauseIcon);
-_Video.addEventListener("click", PlayPause);
-_Video.addEventListener("pause", UpdatePlayPauseIcon);
-_PlayPauseButton.addEventListener("click", PlayPause);
-
-// REWIND AND FAST FORWARD
-_RewindButton.addEventListener("click", () => RewindForward("rewind"));
-_FastForwardButton.addEventListener("click", () => RewindForward("forward"));
-
-// MUTE AND UNMUTE
-_Video.addEventListener("volumechange", UpdateVolumeIcon);
-_VolumeButton.addEventListener("click", MuteUnmute);
-
-// PROGRESS
-_Video.addEventListener("timeupdate", UpdateProgress);
-
-// SEEKING
-let mouseIsDown = false;
-
-_ProgressBar.addEventListener("mousedown", () => (mouseIsDown = true));
-_ProgressBar.addEventListener("mouseup", () => (mouseIsDown = false));
-_ProgressBar.addEventListener("click", Seeking);
-_ProgressBar.addEventListener("mousemove", () => mouseIsDown && Seeking);
-
-// Enhanced keyboard controls
-const VOLUME_STEP = 0.1;
-const SEEK_STEP = 5;
-
-window.addEventListener('keydown', (e) => {
-  // Prevent default behavior for media keys
-  if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyM', 'KeyF'].includes(e.code)) {
-    e.preventDefault();
-  }
-  
-  switch(e.code) {
-    case 'Space':
-      PlayPause();
-      break;
-    case 'ArrowLeft':
-      if (e.shiftKey) {
-        RewindForward('rewind');  // 10 seconds back
-      } else {
-        _Video.currentTime -= SEEK_STEP;  // 5 seconds back
-      }
-      break;
-    case 'ArrowRight':
-      if (e.shiftKey) {
-        RewindForward('forward');  // 10 seconds forward
-      } else {
-        _Video.currentTime += SEEK_STEP;  // 5 seconds forward
-      }
-      break;
-    case 'ArrowUp':
-      _Video.volume = Math.min(1, _Video.volume + VOLUME_STEP);
-      showMessage(`Volume: ${Math.round(_Video.volume * 100)}%`, 'info');
-      break;
-    case 'ArrowDown':
-      _Video.volume = Math.max(0, _Video.volume - VOLUME_STEP);
-      showMessage(`Volume: ${Math.round(_Video.volume * 100)}%`, 'info');
-      break;
-    case 'KeyM':
-      MuteUnmute();
-      break;
-    case 'KeyF':
-      toggleFullscreen();
-      break;
-  }
-});
-
-// Fullscreen functionality
+// Fullscreen
 function toggleFullscreen() {
-  const container = document.querySelector('#container');
   if (!document.fullscreenElement) {
-    container.requestFullscreen().catch(err => {
-      showMessage('Error attempting to enable fullscreen: ' + err.message);
+    _Video.parentElement.parentElement.requestFullscreen().catch(err => {
+      handleError(err);
     });
+    _FullscreenButton.querySelector("i").classList.replace("ph-corners-out", "ph-corners-in");
   } else {
     document.exitFullscreen();
+    _FullscreenButton.querySelector("i").classList.replace("ph-corners-in", "ph-corners-out");
   }
+}
+
+// Event listeners
+_PlayPauseButton.addEventListener("click", PlayPause);
+_Video.addEventListener("click", PlayPause);
+_Video.addEventListener("timeupdate", UpdateProgress);
+
+_RewindButton.addEventListener("click", () => {
+  _Video.currentTime = Math.max(_Video.currentTime - 10, 0);
+});
+
+_FastForwardButton.addEventListener("click", () => {
+  _Video.currentTime = Math.min(_Video.currentTime + 10, _Video.duration);
+});
+
+_VolumeButton.addEventListener("click", MuteUnmute);
+_VolumeSlider.addEventListener("input", (e) => {
+  _Video.volume = e.target.value / 100;
+  UpdateVolumeIcon();
+});
+
+_FullscreenButton.addEventListener("click", toggleFullscreen);
+_CinemaModeToggle.addEventListener("click", toggleCinemaMode);
+
+// Click outside video to exit cinema mode
+document.addEventListener("click", (e) => {
+  if (isCinemaMode && !_Video.parentElement.parentElement.contains(e.target)) {
+    toggleCinemaMode();
+  }
+});
+
+_ProgressBar.addEventListener("click", (e) => {
+  const rect = _ProgressBar.getBoundingClientRect();
+  const pos = (e.clientX - rect.left) / rect.width;
+  _Video.currentTime = pos * _Video.duration;
+});
+
+// Loading and error handling
+_Video.addEventListener("waiting", () => {
+  _LoadingSpinner.classList.remove("hidden");
+});
+
+_Video.addEventListener("canplay", () => {
+  _LoadingSpinner.classList.add("hidden");
+});
+
+_Video.addEventListener("error", () => {
+  _ErrorMessage.classList.remove("hidden");
+  _ErrorMessage.querySelector("p").textContent = "Error loading video";
+});
+
+// Keyboard controls
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    PlayPause();
+  } else if (e.code === "ArrowLeft") {
+    _Video.currentTime = Math.max(_Video.currentTime - 5, 0);
+  } else if (e.code === "ArrowRight") {
+    _Video.currentTime = Math.min(_Video.currentTime + 5, _Video.duration);
+  } else if (e.code === "ArrowUp") {
+    _Video.volume = Math.min(_Video.volume + 0.1, 1);
+    _VolumeSlider.value = _Video.volume * 100;
+    UpdateVolumeIcon();
+  } else if (e.code === "ArrowDown") {
+    _Video.volume = Math.max(_Video.volume - 0.1, 0);
+    _VolumeSlider.value = _Video.volume * 100;
+    UpdateVolumeIcon();
+  } else if (e.code === "KeyF") {
+    toggleFullscreen();
+  } else if (e.code === "KeyM") {
+    MuteUnmute();
+  } else if (e.code === "KeyC") {
+    toggleCinemaMode();
+  }
+});
+
+// Video event listeners
+_Video.addEventListener("play", () => {
+  _PlayPauseButton.querySelector("i").classList.replace("ph-play", "ph-pause");
+  isPlaying = true;
+});
+_Video.addEventListener("pause", () => {
+  _PlayPauseButton.querySelector("i").classList.replace("ph-pause", "ph-play");
+  isPlaying = false;
+});
+_Video.addEventListener("volumechange", UpdateVolumeIcon);
+_Video.addEventListener("loadedmetadata", () => {
+  _Duration.textContent = formatTime(_Video.duration);
+});
+_Video.addEventListener("playing", () => {
+  _LoadingSpinner.classList.add("hidden");
+  _ErrorMessage.classList.add("hidden");
+});
+_Video.addEventListener("error", (error) => {
+  const message = _Video.error;
+  let errorMessage = "An error occurred while playing the video.";
+  
+  switch (message.code) {
+    case 1:
+      errorMessage = "Video loading was aborted.";
+      break;
+    case 2:
+      errorMessage = "Network error occurred while loading the video.";
+      break;
+    case 3:
+      errorMessage = "Error decoding video file.";
+      break;
+    case 4:
+      errorMessage = "Video format not supported.";
+      break;
+  }
+  
+  handleError({ message: errorMessage });
+});
+
+function handleError(error) {
+  _LoadingSpinner.classList.add("hidden");
+  _ErrorMessage.classList.remove("hidden");
+  const message = _ErrorMessage.querySelector("p");
+  message.textContent = error.message || "An error occurred while playing the video.";
 }
