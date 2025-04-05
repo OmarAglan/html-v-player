@@ -28,3 +28,31 @@
     }
   }
 
+/* Add custom styles here if needed */
+
+/* Basic WebVTT Cue Styling */
+::cue {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-family: sans-serif;
+    padding: 0.5em 1em;
+    border-radius: 4px;
+    /* Position cues slightly higher from the bottom */
+    /* Use !important cautiously, may be needed to override browser defaults */
+    /* bottom: 5% !important; */
+}
+
+/* Example: Style specific voice cues differently */
+/* ::cue(v[voice="speaker1"]) { */
+/*    color: yellow; */
+/* } */
+
+/* Vertical Volume Slider */
+.volume-slider-vertical {
+    writing-mode: bt-lr; /* Turn the slider vertical */
+    -webkit-appearance: slider-vertical; /* WebKit specific */
+    appearance: slider-vertical; /* Standard (limited support) */
+    width: 8px; /* Adjust width as needed */
+    height: 100px; /* Adjust height as needed */
+    padding: 0 5px; /* Add some padding */
+}

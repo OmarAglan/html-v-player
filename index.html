@@ -11,45 +11,83 @@
     />
     <title>HTML5 Custom Video Player</title>
   </head>
-  <body class="bg-blue-900 p-10">
+  <body class="bg-slate-900 p-4 sm:p-10 flex flex-col min-h-screen justify-center items-center">
+    <!-- FILE INPUT -->
+    <div class="mb-4 w-full max-w-screen-md flex flex-col sm:flex-row sm:justify-center items-center gap-2 sm:gap-4 p-2">
+      <div class="flex items-center">
+          <label for="video-upload" class="text-white mr-2 text-sm sm:text-base whitespace-nowrap">Upload Video:</label>
+          <input
+            type="file"
+            id="video-upload"
+            accept="video/*"
+            class="text-white file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-2 sm:file:px-4 file:rounded file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer w-full max-w-xs"
+          />
+      </div>
+      <div class="flex items-center">
+          <label for="subtitle-upload" class="text-white mr-2 text-sm sm:text-base whitespace-nowrap">Subtitles (.vtt):</label>
+          <input
+            type="file"
+            id="subtitle-upload"
+            accept=".vtt"
+            class="text-white file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-2 sm:file:px-4 file:rounded file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer w-full max-w-xs"
+          />
+      </div>
+    </div>
+
     <div
       id="container"
-      class="w-4/5 h-4/5 mx-auto rounded-lg overflow-hidden relative group"
+      class="w-full max-w-full lg:max-w-screen-lg aspect-video rounded-lg overflow-hidden relative group bg-black shadow-xl"
     >
+      <!-- ERROR MESSAGE OVERLAY -->
+      <div id="error-overlay" class="absolute inset-0 bg-black/80 text-white text-center flex flex-col justify-center items-center p-4 z-20 hidden">
+        <i class="material-icons text-red-500 text-5xl mb-2">error_outline</i>
+        <p id="error-message">Could not load video.</p>
+      </div>
+
       <!-- VIDEO -->
       <figure>
         <video class="w-full">
-          <source src="/123.mp4" />
+          <!-- Video source should be set dynamically -->
+          <track kind="subtitles" label="English" srclang="en" id="subtitle-track">
         </video>
       </figure>
       <!-- CONTROLS -->
       <div
         id="controls"
-        class="opacity-0 p-5 absolute bottom-0 left-0 w-full transition-opacity duration-300 ease-linear group-hover:opacity-100"
+        class="opacity-0 p-3 absolute bottom-0 left-0 w-full transition-opacity duration-300 ease-linear group-hover:opacity-100 bg-gradient-to-t from-black/70 to-transparent"
       >
-        <!-- PROGRESS BAR -->
-        <div id="progress-bar" class="h-1 w-full bg-white cursor-pointer mb-4">
-          <div
-            id="progress-indicator"
-            class="h-full w-9 bg-indigo-800 transition-all duration-500 ease-in-out"
-          ></div>
+        <!-- PROGRESS BAR CONTAINER -->
+        <div id="progress-bar-container" class="relative mb-3 group/progress">
+           <!-- PROGRESS BAR TOOLTIP -->
+           <span
+             id="progress-tooltip"
+             class="absolute bottom-full left-0 mb-2 px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap hidden -translate-x-1/2"
+           >00:00</span>
+           <!-- PROGRESS BAR -->
+           <div id="progress-bar" class="h-1.5 w-full bg-white/30 cursor-pointer group-hover/progress:h-2.5 transition-all duration-200 ease-out rounded">
+             <div
+               id="progress-indicator"
+               class="h-full bg-teal-500 transition-all duration-100 ease-linear pointer-events-none rounded"
+             ></div>
+           </div>
         </div>
+
         <div class="flex items-center justify-between">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-1 sm:space-x-2">
             <!-- REWIND BUTTON -->
             <button
               id="rewind"
-              class="transition-all duration-100 ease-linear hover:scale-125"
+              class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10"
             >
-              <i class="material-icons text-white text-3xl w-12">replay_10 </i>
+              <i class="material-icons text-white text-2xl sm:text-3xl w-8 sm:w-10 flex items-center justify-center">replay_10 </i>
             </button>
 
             <!-- PLAY BUTTON -->
             <button
               id="play-pause"
-              class="transition-all duration-100 ease-linear hover:scale-125"
+              class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10"
             >
-              <i class="material-icons text-white text-5xl inline-block w-12"
+              <i class="material-icons text-white text-4xl sm:text-5xl inline-block w-8 sm:w-10 flex items-center justify-center"
                 >play_arrow</i
               >
             </button>
@@ -57,19 +95,79 @@
             <!-- FAST FORWARD BUTTON -->
             <button
               id="fast-forward"
-              class="transition-all duration-100 ease-linear hover:scale-125"
+              class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10"
             >
-              <i class="material-icons text-white text-3xl w-12">forward_10 </i>
+              <i class="material-icons text-white text-2xl sm:text-3xl w-8 sm:w-10 flex items-center justify-center">forward_10 </i>
             </button>
+
+            <!-- PLAYBACK SPEED CONTAINER -->
+            <div class="relative inline-block ml-2 playback-speed-container">
+              <!-- PLAYBACK SPEED BUTTON -->
+              <button
+                id="playback-speed"
+                class="text-white text-sm font-bold px-2 py-1 rounded bg-teal-600 hover:bg-teal-700 relative"
+              >
+                1x
+              </button>
+              <!-- SPEED OPTIONS LIST (Hidden by default) -->
+              <ul
+                id="speed-options"
+                class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 w-max bg-slate-800 text-white text-xs rounded shadow-md hidden z-10 overflow-hidden"
+              >
+                <!-- Options will be populated by JS -->
+              </ul>
+            </div>
           </div>
 
-          <div>
-            <!-- VOLUME BUTTON -->
+          <div class="flex items-center space-x-1 sm:space-x-2">
+            <!-- VOLUME CONTROL CONTAINER (Relative for Slider Positioning) -->
+            <div class="relative volume-control-area">
+                 <!-- VERTICAL SLIDER CONTAINER (Visibility now managed by JS) -->
+                 <div id="volume-slider-container" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-slate-800/80 backdrop-blur-sm rounded shadow-lg opacity-0 invisible transition-all duration-150 ease-out z-10">
+                     <input
+                       type="range"
+                       id="volume-slider"
+                       min="0"
+                       max="1"
+                       step="0.01"
+                       value="1"
+                       orient="vertical"
+                       class="volume-slider-vertical accent-teal-500 cursor-pointer"
+                     />
+                 </div>
+                 <!-- VOLUME ICON BUTTON -->
+                 <button
+                   id="volume"
+                   class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10"
+                 >
+                   <i class="material-icons text-white text-2xl sm:text-3xl">volume_up</i>
+                 </button>
+            </div>
+            <!-- TIME DISPLAY -->
+            <span id="current-time" class="text-white text-xs sm:text-sm">00:00</span>
+            <span class="text-white text-xs sm:text-sm">/</span>
+            <span id="total-duration" class="text-white text-xs sm:text-sm">00:00</span>
+            <!-- PICTURE-IN-PICTURE BUTTON (Hidden by default) -->
             <button
-              id="volume"
-              class="transition-all duration-100 ease-linear hover:scale-125"
+                id="pip-toggle"
+                class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10 hidden"
             >
-              <i class="material-icons text-white text-3xl">volume_up</i>
+                <i class="material-icons text-white text-2xl sm:text-3xl">picture_in_picture_alt</i>
+            </button>
+            <!-- FULLSCREEN BUTTON -->
+            <button
+                id="fullscreen"
+                class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10"
+            >
+                <i class="material-icons text-white text-2xl sm:text-3xl">fullscreen</i>
+            </button>
+            <!-- SUBTITLE TOGGLE BUTTON -->
+            <button
+                id="subtitle-toggle"
+                class="p-2 rounded-full transition-colors duration-150 ease-linear hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                disabled
+            >
+                <i class="material-icons text-white text-2xl sm:text-3xl">subtitles_off</i>
             </button>
           </div>
         </div>
